@@ -2,7 +2,7 @@
 
 import { LanguageValue } from '../../xml/xml.interfaces';
 
-export type Category = {
+export type WSCategory = {
   active: number;
   additional_description?: LanguageValue[] | string;
   associations?: {
@@ -27,7 +27,7 @@ export type Category = {
 };
 
 //Writable
-export type CategoryWritable = Omit<
-  Category,
+export type WSCategoryWritable = Omit<
+  WSCategory,
   'level_depth' | 'nb_products_recursive'
 >;

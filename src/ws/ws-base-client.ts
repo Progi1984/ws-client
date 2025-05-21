@@ -1,20 +1,17 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { create } from 'xmlbuilder2';
 import { Config } from '../types/config.type';
-import { Entity, EntityWritable } from '../types/entity-mapping.type';
+import { WSEntity, WSEntityWritable } from '../types/entity-mapping.type';
 import { endpointNodes } from '../xml/endpoint-nodes';
 import { getLanguageValues } from '../xml/xml.interfaces';
 import { wsConfig } from './ws-config';
 
-/**
- *
- */
 export interface RequestOptions {
   id?: string;
   query?: Record<string, string>;
 }
 
-export class BaseClient<T extends keyof Entity> {
+export class BaseClient<T extends keyof WSEntity> {
   private languageIds: number | number[] = -1;
   private requiredNodes: string[] = [];
   private readOnlyNodes: string[] = [];
@@ -23,7 +20,6 @@ export class BaseClient<T extends keyof Entity> {
   constructor(private readonly endpoint: T) {}
 
   /**
-   *
    * @param {string} endpoint - Endpoint
    * @param {RequestOptions} options - Query parameters
    */
@@ -60,14 +56,14 @@ export class BaseClient<T extends keyof Entity> {
 
   /**
    *
-   * @param {Partial<EntityWritable>} entityData - Data for the entity to be created
+   * @param {Partial<WSEntityWritable>} entityData - Data for the entity to be created
    */
-  async create(entityData: Partial<EntityWritable[T]>): Promise<Entity[T]> {
+  async create(entityData: Partial<WSEntityWritable[T]>): Promise<WSEntity[T]> {
     if (this.getRequiredFields().length == 0) {
       //async ressources
       await this.initSpecificEntityFieldsIndicators();
     }
-    const entity: Entity[T] = await this.getBlank();
+    const entity: WSEntity[T] = await this.getJSONBlank();
     this.fillFields(entity, entityData);
     this.removeReadOnlyFields(entity, entityData);
 
@@ -94,14 +90,14 @@ export class BaseClient<T extends keyof Entity> {
       },
     );
     const result = await response.json();
-    return result[this.getEndPoint()][0] as Entity[T];
+    return result[this.getEndPoint()][0] as WSEntity[T];
   }
 
   /**
    *
    * @param { string } id - ID's entity
    */
-  async get(id: string): Promise<Entity[T]> {
+  async get(id: string): Promise<WSEntity[T]> {
     const response: Response = await fetch(
       this.getUrl(this.getEndPoint(), {
         id: id,
@@ -118,10 +114,10 @@ export class BaseClient<T extends keyof Entity> {
       },
     );
     const json = await response.json();
-    return json[this.getEndPoint()][0] as Entity[T];
+    return json[this.getEndPoint()][0] as WSEntity[T];
   }
 
-  async getAll(): Promise<Entity[T]> {
+  async getAll(): Promise<WSEntity[T]> {
     const response: Response = await fetch(
       this.getUrl(this.getEndPoint(), {
         query: {
@@ -137,20 +133,20 @@ export class BaseClient<T extends keyof Entity> {
       },
     );
     const json = await response.json();
-    return json[this.getEndPoint()][0] as Entity[T];
+    return json[this.getEndPoint()][0] as WSEntity[T];
   }
 
   /**
    *
    * @param {Partial<EntityWritable>} entityData - Data for the entity to be updated
    */
-  async update(entityData: Partial<EntityWritable[T]>): Promise<Entity[T]> {
+  async update(entityData: Partial<WSEntityWritable[T]>): Promise<WSEntity[T]> {
     if (this.getRequiredFields().length == 0) {
       //async ressources
       await this.initSpecificEntityFieldsIndicators();
     }
     const entityId = entityData.id;
-    const entity: Entity[T] = await this.get(entityId!.toString());
+    const entity: WSEntity[T] = await this.get(entityId!.toString());
     this.fillFields(entity, entityData);
     this.removeReadOnlyFields(entity, entityData);
 
@@ -176,7 +172,7 @@ export class BaseClient<T extends keyof Entity> {
         body: xml,
       },
     );
-    return (await response.json()) as Entity[T];
+    return (await response.json()) as WSEntity[T];
   }
 
   async delete(id: string): Promise<number> {
@@ -242,9 +238,9 @@ export class BaseClient<T extends keyof Entity> {
   }
 
   /**
-   * ?schema=blank: returns a blank Json tree of the chosen resource.
+   * ?schema=blank&output_format=JSON: returns a blank Json tree of the chosen resource.
    */
-  async getBlank(): Promise<Entity[T]> {
+  async getJSONBlank(): Promise<WSEntity[T]> {
     const response: Response = await fetch(
       this.getUrl(this.getEndPoint(), {
         query: {
@@ -262,7 +258,30 @@ export class BaseClient<T extends keyof Entity> {
     );
 
     const json = await response.json();
-    return json[this.getEndPoint()][0] as Entity[T];
+    return json[this.getEndPoint()][0] as WSEntity[T];
+  }
+
+  /**
+   * ?schema=blank&output_format=XML: returns a blank XML tree of the chosen resource.
+   */
+  async getXMLBlank(): Promise<string> {
+    const response: Response = await fetch(
+      this.getUrl(this.getEndPoint(), {
+        query: {
+          ws_key: this.getConfig().key,
+          schema: 'blank',
+          output_format: 'XML',
+          display: 'full',
+        },
+      }),
+      {
+        method: 'GET',
+        mode: 'no-cors',
+        headers: this.getDefaultHeaders(),
+      },
+    );
+
+    return response.text();
   }
 
   /**
@@ -282,7 +301,7 @@ export class BaseClient<T extends keyof Entity> {
    * @param {Entity} entity - The blank entity
    * @param {Partial<EntityWritable>} entityData - Data for the entity to be created
    */
-  fillFields(entity: Entity[T], entityData: Partial<EntityWritable[T]>) {
+  fillFields(entity: WSEntity[T], entityData: Partial<WSEntityWritable[T]>) {
     const requiredFieldsFound: string[] = [];
 
     for (const property of Object.keys(entityData)) {
@@ -310,8 +329,8 @@ export class BaseClient<T extends keyof Entity> {
   }
 
   removeReadOnlyFields(
-    entity: Partial<Entity[T]>,
-    entityData: Partial<EntityWritable[T]>,
+    entity: Partial<WSEntity[T]>,
+    entityData: Partial<WSEntityWritable[T]>,
   ) {
     for (const property in entity) {
       if (
@@ -338,7 +357,7 @@ export class BaseClient<T extends keyof Entity> {
 
   isNotUpdatedField(
     property: string,
-    shopContentData: Partial<EntityWritable[T]>,
+    shopContentData: Partial<WSEntityWritable[T]>,
   ) {
     return !shopContentData[property];
   }

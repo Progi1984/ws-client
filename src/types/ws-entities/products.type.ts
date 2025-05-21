@@ -1,6 +1,6 @@
 import { LanguageValue } from '../../xml/xml.interfaces';
 
-export type Product = {
+export type WSProduct = {
   active: string;
   additional_delivery_times: string;
   additional_shipping_cost: string;
@@ -93,4 +93,7 @@ export type Product = {
   width: string;
 };
 
-export type ProductWritable = Omit<Product, 'manufacturer_name' | 'quantity'>;
+export type WSProductWritable = Omit<
+  WSProduct,
+  'manufacturer_name' | 'quantity'
+>;

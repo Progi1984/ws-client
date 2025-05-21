@@ -1,4 +1,4 @@
-export type Order = {
+export type WSOrder = {
   associations?: { order_rows?: OrderRow[] };
   carrier_tax_rate: string;
   conversion_rate: string;

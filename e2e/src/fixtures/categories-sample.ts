@@ -1,6 +1,6 @@
-import { CategoryWritable } from 'prestashop-ws-client';
+import { WSCategoryWritable } from 'prestashop-ws-client';
 import { getLanguageValues } from 'prestashop-ws-client/src/xml/xml.interfaces';
-export const newCategory: CategoryWritable = {
+export const newCategory: WSCategoryWritable = {
   id_parent: 3,
   active: 1,
   id_shop_default: '1',
@@ -22,7 +22,7 @@ export const newCategory: CategoryWritable = {
   },
 };
 
-export const categoryMultilanguage: CategoryWritable = {
+export const categoryMultilanguage: WSCategoryWritable = {
   id: 4,
   id_parent: 3,
   active: 1,

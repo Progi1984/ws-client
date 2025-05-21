@@ -19,7 +19,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "pnpm run build:cjs && pnpm run build:esm",
+    "build": "npm run build:cjs && npm run build:esm",
     "build:esm": "rollup --bundleConfigAsCjs --config ./rollup.config.js",
     "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "test": "jest",
@@ -27,8 +27,9 @@
     "lint": "eslint 'src/**/*.ts'",
     "format:fix": "prettier --write 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
-    "fix": "pnpm format:fix && pnpm lint:fix",
-    "example": "ts-node ./examples/test.ts"
+    "fix": "npm format:fix && npm lint:fix",
+    "example": "ts-node ./examples/test.ts",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
